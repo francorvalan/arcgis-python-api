@@ -23,6 +23,8 @@ export_survey_to_docx(
     output_path="reporte_survey.docx",
     id_field="id_sitios",
     columns=["fecha", "tecnico", "estado"],
+    date_fields=["fecha"],
+    date_format="{day}/{month}/{year} {time}",
 )
 ```
 
@@ -46,3 +48,19 @@ export_survey_to_docx(
 
 - Las fotos se toman desde los **attachments** de cada registro y se insertan en la última columna.
 - Requiere `python-docx` (`pip install python-docx`).
+
+
+## Formato de fecha/hora (epoch en milisegundos)
+
+Si una columna fecha viene como `1772206740000`, puedes indicar ese campo en `date_fields` para que se renderice como texto legible en el Word.
+
+Ejemplo de salida: `27/2/2026 15:39:00`.
+
+- `date_fields`: lista de nombres de campo que se deben interpretar como fecha/hora en epoch ms.
+- `date_format`: plantilla de formato. Por defecto: `"{day}/{month}/{year} {time}"`.
+
+Variables disponibles en `date_format`:
+- `{day}`
+- `{month}`
+- `{year}`
+- `{time}` (formato `HH:MM:SS`)

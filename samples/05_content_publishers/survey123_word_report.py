@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -48,6 +49,8 @@ def export_survey_to_docx(
     columns: Sequence[str] | None = None,
     where: str = "1=1",
     order_by_field: str | None = None,
+    date_fields: Sequence[str] | None = None,
+    date_format: str = "{day}/{month}/{year} {time}",
     photo_column_title: str = "fotos",
     photo_mode: str = "all",
     orientation: str = "vertical",
@@ -68,6 +71,11 @@ def export_survey_to_docx(
         raise ValueError(
             f"El campo order_by_field '{order_by_field}' no existe en la capa."
         )
+
+    if date_fields is None:
+        date_fields = []
+    else:
+        _validate_columns(date_fields, available_fields)
 
     photo_mode = photo_mode.lower()
     valid_photo_modes = {"primera", "ultima", "random", "all"}
@@ -117,7 +125,10 @@ def export_survey_to_docx(
 
             for idx, field_name in enumerate(selected_columns):
                 value = attrs.get(field_name)
-                row_cells[idx].text = "" if value is None else str(value)
+                value_text = _format_cell_value(
+                    value, field_name=field_name, date_fields=date_fields, date_format=date_format
+                )
+                row_cells[idx].text = value_text
 
             oid_value = attrs.get(oid_field)
             if oid_value is None:
@@ -142,6 +153,40 @@ def export_survey_to_docx(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     document.save(str(output_path))
     return output_path
+
+
+def _format_cell_value(
+    value,
+    field_name: str,
+    date_fields: Sequence[str],
+    date_format: str,
+) -> str:
+    if value is None:
+        return ""
+
+    if field_name in date_fields:
+        dt = _epoch_ms_to_datetime(value)
+        if dt is not None:
+            return date_format.format(
+                day=dt.day,
+                month=dt.month,
+                year=dt.year,
+                time=dt.strftime("%H:%M:%S"),
+            )
+
+    return str(value)
+
+
+def _epoch_ms_to_datetime(value) -> datetime | None:
+    try:
+        epoch_ms = int(value)
+    except (TypeError, ValueError):
+        return None
+
+    try:
+        return datetime.fromtimestamp(epoch_ms / 1000)
+    except (OverflowError, OSError, ValueError):
+        return None
 
 
 def _validate_columns(columns: Iterable[str], available_fields: Sequence[str]) -> None:
