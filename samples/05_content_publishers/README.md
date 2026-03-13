@@ -56,7 +56,7 @@ Si una columna fecha viene como `1772206740000`, puedes indicar ese campo en `da
 
 Ejemplo de salida: `27/2/2026 15:39:00`.
 
-- `date_fields`: lista de nombres de campo que se deben interpretar como fecha/hora en epoch ms.
+- `date_fields`: nombre de campo (`"fecha_hora"`) o lista de campos (`["fecha_hora", "otra_fecha"]`) a interpretar como fecha/hora en epoch ms.
 - `date_format`: plantilla de formato. Por defecto: `"{day}/{month}/{year} {time}"`.
 
 Variables disponibles en `date_format`:

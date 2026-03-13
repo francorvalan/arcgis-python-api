@@ -49,7 +49,7 @@ def export_survey_to_docx(
     columns: Sequence[str] | None = None,
     where: str = "1=1",
     order_by_field: str | None = None,
-    date_fields: Sequence[str] | None = None,
+    date_fields: str | Sequence[str] | None = None,
     date_format: str = "{day}/{month}/{year} {time}",
     photo_column_title: str = "fotos",
     photo_mode: str = "all",
@@ -72,10 +72,8 @@ def export_survey_to_docx(
             f"El campo order_by_field '{order_by_field}' no existe en la capa."
         )
 
-    if date_fields is None:
-        date_fields = []
-    else:
-        _validate_columns(date_fields, available_fields)
+    date_fields = _normalize_field_list(date_fields)
+    _validate_columns(date_fields, available_fields)
 
     photo_mode = photo_mode.lower()
     valid_photo_modes = {"primera", "ultima", "random", "all"}
@@ -188,6 +186,14 @@ def _epoch_ms_to_datetime(value) -> datetime | None:
     except (OverflowError, OSError, ValueError):
         return None
 
+
+
+def _normalize_field_list(fields: str | Sequence[str] | None) -> list[str]:
+    if fields is None:
+        return []
+    if isinstance(fields, str):
+        return [fields]
+    return list(fields)
 
 def _validate_columns(columns: Iterable[str], available_fields: Sequence[str]) -> None:
     missing = [col for col in columns if col not in available_fields]
